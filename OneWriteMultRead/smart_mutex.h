@@ -1,3 +1,6 @@
+#ifndef SMART_MUTEX_H
+#define SMART_MUTEX_H
+
 #include <mutex> 
 #include <iostream>
 
@@ -50,3 +53,5 @@ public:
 	}
 	
 };
+
+#endif

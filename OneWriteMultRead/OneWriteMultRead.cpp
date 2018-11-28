@@ -8,10 +8,9 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-#include "smart_mutex.h"
+#include "unique_read_lock.h"
+#include "unique_write_lock.h"
 #include "one_shot.h"
-
-
 
 one_shot one_shot_signal;
 
@@ -20,7 +19,8 @@ smart_mutex mx;
 void write(int id) {
 	one_shot_signal.wait();
 		
-	mx.start_write();
+	unique_write_lock lock(mx);
+
 	std::stringstream ss;
 	ss << "writing";
 	for (int i = 0; i < id; i++)
@@ -28,7 +28,6 @@ void write(int id) {
 	ss << id << std::endl;
 	std::cout << ss.str();
 	std::this_thread::sleep_for(std::chrono::seconds(2));
-	mx.stop_write();
 
 }
 
@@ -36,7 +35,8 @@ void write(int id) {
 void read(int id) {
 	one_shot_signal.wait();
 
-	mx.start_read();
+	unique_read_lock lock(mx);
+
 	std::stringstream ss;
 	ss << "reading";
 	for (int i = 0; i < id; i++)
@@ -44,7 +44,6 @@ void read(int id) {
 	ss << id << std::endl;
 	std::cout << ss.str();
 	std::this_thread::sleep_for(std::chrono::seconds(4));
-	mx.stop_read();
 	
 }
 
