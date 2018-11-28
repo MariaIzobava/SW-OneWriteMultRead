@@ -13,6 +13,8 @@ public:
 		mx_->start_read();
 	}
 
+	unique_read_lock(const unique_read_lock&) = delete;
+
 	~unique_read_lock() {
 		mx_->stop_read();
 	}

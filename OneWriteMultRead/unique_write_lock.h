@@ -13,6 +13,8 @@ public:
 		mx_->start_write();
 	}
 
+	unique_write_lock(const unique_write_lock&) = delete;
+
 	~unique_write_lock() {
 		mx_->stop_write();
 	}
