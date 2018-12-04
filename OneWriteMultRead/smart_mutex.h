@@ -9,6 +9,7 @@ private:
 
 	int number_of_readers_;
 	bool writer_is_active_;
+	int number_of_expected_writers_;
 
 	std::mutex mx_;
 	std::condition_variable writing_thread_;
@@ -21,9 +22,11 @@ public:
 	void start_write() {
 		{
 			std::unique_lock<std::mutex> lock(mx_);
+			number_of_expected_writers_++;
 			writing_thread_.wait(lock, [&]() {return !writer_is_active_ && !number_of_readers_; });
 			writer_is_active_ = true;
 			std::cout << "Thread is writing\n";
+			number_of_expected_writers_--;
 		}
 	}
 	void stop_write() {
@@ -31,16 +34,18 @@ public:
 			std::unique_lock<std::mutex> lock(mx_);
 			writer_is_active_ = false;
 		}
-		writing_thread_.notify_all();
-		reading_threads_.notify_all();
+		if (number_of_expected_writers_ > 0) 
+			writing_thread_.notify_one();
+		else
+			reading_threads_.notify_all();
 		
 	}
 
 	void start_read() {
 		{
 			std::unique_lock<std::mutex> lock(mx_);
+			reading_threads_.wait(lock, [&]() {return !writer_is_active_ && !number_of_expected_writers_; });
 			number_of_readers_++;
-			reading_threads_.wait(lock, [&]() {return !writer_is_active_; });
 		}
 		std::cout << "Thread is reading\n";
 	}
@@ -49,7 +54,7 @@ public:
 			std::unique_lock<std::mutex> lock(mx_);
 			number_of_readers_--;
 		}
-		writing_thread_.notify_all();
+		writing_thread_.notify_one();
 	}
 	
 };
